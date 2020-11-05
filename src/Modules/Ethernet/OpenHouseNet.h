@@ -36,19 +36,21 @@ OpenHouseNet::OpenHouseNet(unsigned short int ethernetCsPin){
 }
 
 void OpenHouseNet::Loop(){
-    switch (Ethernet.maintain()){
-    case 1:
-        Serial.println("Ethernet:DHCP filed");
-    case 2:
-        Serial.println("Ethernet:DHCP lease error");
-        OpenHouseNet::PrintIpStatus();
-    case 3:
-        Serial.println("Ethernet:Rebind DHCP filed");
-    case 4:
-        Serial.println("Ethernet:Ip status updated");
-        OpenHouseNet::PrintIpStatus();
-    default:
-        break;
+    if(OpenHouseNet::ethernetShieldChip!=0){
+        switch (Ethernet.maintain()){
+            case 1:
+                Serial.println("Ethernet:DHCP filed");
+            case 2:
+                Serial.println("Ethernet:DHCP lease error");
+                OpenHouseNet::PrintIpStatus();
+            case 3:
+                Serial.println("Ethernet:Rebind DHCP filed");
+            case 4:
+                Serial.println("Ethernet:Ip status updated");
+                OpenHouseNet::PrintIpStatus();
+            default:
+                break;
+        }
     }
 }
 
