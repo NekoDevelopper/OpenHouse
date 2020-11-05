@@ -27,11 +27,28 @@ class OpenHouseNet{
         void Begin(byte *mac, byte *ip, byte *subnet, byte *dns, byte *gateway);
         //
         OpenHouseNet(unsigned short int ethernetCsPin=10);
+        void Loop();
 
 };
 
 OpenHouseNet::OpenHouseNet(unsigned short int ethernetCsPin){
     Ethernet.init(ethernetCsPin);
+}
+
+void OpenHouseNet::Loop(){
+    switch (Ethernet.maintain()){
+    case 1:
+        Serial.println("Ethernet:Renew DHCP filed");
+    case 2:
+        Serial.println("Ip status updated:");
+        OpenHouseNet::PrintIpStatus();
+    case 3:
+        Serial.println("Rebind DHCP filed");
+    case 4:
+        Serial.println("Rebind DHCP succes");
+    default:
+        break;
+    }
 }
 
 void OpenHouseNet::PrintHardwareStatus(){
