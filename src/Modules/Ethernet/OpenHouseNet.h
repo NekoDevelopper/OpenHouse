@@ -38,14 +38,15 @@ OpenHouseNet::OpenHouseNet(unsigned short int ethernetCsPin){
 void OpenHouseNet::Loop(){
     switch (Ethernet.maintain()){
     case 1:
-        Serial.println("Ethernet:Renew DHCP filed");
+        Serial.println("Ethernet:DHCP filed");
     case 2:
-        Serial.println("Ip status updated:");
+        Serial.println("Ethernet:DHCP lease error");
         OpenHouseNet::PrintIpStatus();
     case 3:
-        Serial.println("Rebind DHCP filed");
+        Serial.println("Ethernet:Rebind DHCP filed");
     case 4:
-        Serial.println("Rebind DHCP succes");
+        Serial.println("Ethernet:Ip status updated");
+        OpenHouseNet::PrintIpStatus();
     default:
         break;
     }
