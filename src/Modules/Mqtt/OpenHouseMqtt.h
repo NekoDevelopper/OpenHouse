@@ -24,9 +24,9 @@ class OpenHouseMqtt{
 void OpenHouseMqtt::Reconnect(){
     static unsigned long int lastTry;
     if(millis()-lastTry>=mqttReconnectionTime*1000){
-        if(Mqtt.connected()==0){
+        if(OpenHouseMqtt::Mqtt.connected()==0){
             Serial.print("Connection to MQTT server:");
-            Serial.println(Mqtt.connect(mqttClientId));
+            Serial.println(OpenHouseMqtt::Mqtt.connect(mqttClientId));
             lastTry=millis();
         }
     }
