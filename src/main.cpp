@@ -13,14 +13,37 @@ OpenHouseMqtt Mqtt;
 
 char Sensor1Topic[]="/mdm/2";
 OpenHouseMqttSensor Sensor1(&Mqtt,Sensor1Topic);
+void TestVoid(char *message){
+  if(message[0]=='1'){
+    digitalWrite(2,HIGH);
+  }else if(message[0]=='0'){
+    digitalWrite(2,LOW);
+  }
+}
 
+char Relay1Topic[]="/mdm/1";
+OpenHouseMqttRelay Relay1(&Mqtt,Relay1Topic,&TestVoid);
+
+void subscribe(){
+  Relay1.Subscribe();
+}
+
+char bufer[200];
+void HandleMeeesgae(char* topic, byte* payload, unsigned int length){
+  for(unsigned int i=0;i<length;i++){
+    bufer[i]=(char)payload[i];
+  }
+  Relay1.Recive(bufer,topic);
+}
 void setup() {
   Serial.begin(9600);
-  Mqtt.Begin(&MqttEthernetClient,MqttServerAdress,&MqttServerPort,MqttClientId);
+  pinMode(2,OUTPUT);
+  Mqtt.Begin(&MqttEthernetClient,&subscribe,&HandleMeeesgae,MqttServerAdress,&MqttServerPort,MqttClientId);
   Network.Begin(ethernetMac);
 }
 unsigned long int millissss=0;
 char test[]="123";
+
 void loop() {
   Network.Loop();
   Mqtt.Loop();
