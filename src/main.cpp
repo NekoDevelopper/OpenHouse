@@ -3,24 +3,20 @@
 #include "Modules/Mqtt/Devices.h"
 #include <DHT.h>
 
-OpenHouseNet Network;
 byte ethernetMac[6] = {0x5A,0x12,0xF0,0xAF,0xAD,0x71};
-
-EthernetClient MqttEthernetClient;
 char MqttServerAdress[] = "192.168.1.14";
 char MqttClientId[] = "Test";
 int MqttServerPort = 1883;
-OpenHouseMqtt Mqtt;
 
-DHT dht(4, 22);
+DHT dht(3, 22);
 char SensorTempTopic[] = "/Test/Temperature";
-OpenHouseMqttSensor SensorTemp(&Mqtt, SensorTempTopic);
+OHMqttSensor SensorTemp(SensorTempTopic);
 char SensorHumTopic[] = "/Test/Humidity";
-OpenHouseMqttSensor SensorHum(&Mqtt, SensorHumTopic);
+OHMqttSensor SensorHum(SensorHumTopic);
 
 char Relay1Topic[] = "/Test/Termostat/Relay";
 void (Relay1On(char *message));
-OpenHouseMqttRelay Relay1(&Mqtt, Relay1Topic, &Relay1On);
+OHMqttRelay Relay1(Relay1Topic, &Relay1On);
 void Relay1On(char *message)
 {
     if (message[0] == '1')
@@ -54,8 +50,8 @@ void setup()
     Serial.begin(9600);
     dht.begin();
     pinMode(2, OUTPUT);
-    Mqtt.Begin(&MqttEthernetClient, &subscribe, &HandleMeeesgae, MqttServerAdress, &MqttServerPort, MqttClientId);
-    Network.Begin(ethernetMac);
+    OHMqtt.Begin(&subscribe, &HandleMeeesgae, MqttServerAdress, &MqttServerPort, MqttClientId);
+    OHNet.Begin(ethernetMac);
 }
 
 unsigned long int millissss = 0;
@@ -64,8 +60,8 @@ float Humidity;
 
 void loop()
 {
-    Network.Loop();
-    Mqtt.Loop();
+    OHNet.Loop();
+    OHMqtt.Loop();
 
     if (millis() - millissss >= 5000)
     {
