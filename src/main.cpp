@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Modules/Ethernet/OpenHouseNet.h"
-#include "Modules/Mqtt/Devices.h"
+#include "Modules/Mqtt/OpenHouseMqtt.h"
 #include <DHT.h>
 
 byte ethernetMac[6] = {0x5A,0x12,0xF0,0xAF,0xAD,0x71};
@@ -9,48 +9,18 @@ char MqttClientId[] = "Test";
 int MqttServerPort = 1883;
 
 DHT dht(3, 22);
-char SensorTempTopic[] = "/Test/Temperature";
-OHMqttSensor SensorTemp(SensorTempTopic);
-char SensorHumTopic[] = "/Test/Humidity";
-OHMqttSensor SensorHum(SensorHumTopic);
+OHMqttSender HumiditySender((char*)"/Test/Humidity");
+OHMqttSender TemperatureSender((char*)"/Test/Temperature");
 
-char Relay1Topic[] = "/Test/Termostat/Relay";
-void (Relay1On(char *message));
-OHMqttRelay Relay1(Relay1Topic, &Relay1On);
-void Relay1On(char *message)
-{
-    if (message[0] == '1')
-    {
-        digitalWrite(2, HIGH);
-    }
-    else if (message[0] == '0')
-    {
-        digitalWrite(2, LOW);
-    }
-}
-
-
-void subscribe()
-{
-    Relay1.Subscribe();
-}
-
-void HandleMeeesgae(char *topic, byte *payload, unsigned int length)
-{
-    char bufer[200] = "";
-    for (unsigned int i = 0; i < length; i++)
-    {
-        bufer[i] = (char)payload[i];
-    }
-    Relay1.Recive(bufer, topic);
-}
+void RelayFunc(char *message){digitalWrite(2,atoi(message));}
+OHMqttHandler Relay((char*)"/Test/Relay",&RelayFunc);
 
 void setup()
 {
     Serial.begin(9600);
     dht.begin();
     pinMode(2, OUTPUT);
-    OHMqtt.Begin(&subscribe, &HandleMeeesgae, MqttServerAdress, &MqttServerPort, MqttClientId);
+    OHMqtt.Begin(MqttServerAdress, &MqttServerPort, MqttClientId);
     OHNet.Begin(ethernetMac);
 }
 
@@ -69,9 +39,9 @@ void loop()
         Humidity = dht.readHumidity();
         char buf[20];
         dtostrf(Temperature, 3, 3, buf);
-        SensorTemp.Send(buf);
+        TemperatureSender.send(buf);
         dtostrf(Humidity, 3, 3, buf);
-        SensorHum.Send(buf);
+        HumiditySender.send(buf);
         millissss = millis();
     }
     else if (millis() - millissss < 0)
