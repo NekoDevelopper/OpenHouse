@@ -1,55 +1,85 @@
 #include <Arduino.h>
 #include "Modules/Ethernet/OpenHouseNet.h"
 #include "Modules/Mqtt/Devices.h"
+#include <DHT.h>
+
 OpenHouseNet Network;
-byte ethernetMac[6]={0x00,0x01,0x02,0x03,0x04,0x05};
+byte ethernetMac[6] = {0x5A,0x12,0xF0,0xAF,0xAD,0x71};
 
 EthernetClient MqttEthernetClient;
-char MqttServerAdress[]="192.168.1.14";
-char MqttClientId[]="Test";
-int MqttServerPort=1883;
-
+char MqttServerAdress[] = "192.168.1.14";
+char MqttClientId[] = "Test";
+int MqttServerPort = 1883;
 OpenHouseMqtt Mqtt;
 
-char Sensor1Topic[]="/mdm/2";
-OpenHouseMqttSensor Sensor1(&Mqtt,Sensor1Topic);
-void TestVoid(char *message){
-  if(message[0]=='1'){
-    digitalWrite(2,HIGH);
-  }else if(message[0]=='0'){
-    digitalWrite(2,LOW);
-  }
+DHT dht(4, 22);
+char SensorTempTopic[] = "/Test/Temperature";
+OpenHouseMqttSensor SensorTemp(&Mqtt, SensorTempTopic);
+char SensorHumTopic[] = "/Test/Humidity";
+OpenHouseMqttSensor SensorHum(&Mqtt, SensorHumTopic);
+
+char Relay1Topic[] = "/Test/Termostat/Relay";
+void (Relay1On(char *message));
+OpenHouseMqttRelay Relay1(&Mqtt, Relay1Topic, &Relay1On);
+void Relay1On(char *message)
+{
+    if (message[0] == '1')
+    {
+        digitalWrite(2, HIGH);
+    }
+    else if (message[0] == '0')
+    {
+        digitalWrite(2, LOW);
+    }
 }
 
-char Relay1Topic[]="/mdm/1";
-OpenHouseMqttRelay Relay1(&Mqtt,Relay1Topic,&TestVoid);
 
-void subscribe(){
-  Relay1.Subscribe();
+void subscribe()
+{
+    Relay1.Subscribe();
 }
 
-char bufer[200];
-void HandleMeeesgae(char* topic, byte* payload, unsigned int length){
-  for(unsigned int i=0;i<length;i++){
-    bufer[i]=(char)payload[i];
-  }
-  Relay1.Recive(bufer,topic);
+void HandleMeeesgae(char *topic, byte *payload, unsigned int length)
+{
+    char bufer[200] = "";
+    for (unsigned int i = 0; i < length; i++)
+    {
+        bufer[i] = (char)payload[i];
+    }
+    Relay1.Recive(bufer, topic);
 }
-void setup() {
-  Serial.begin(9600);
-  pinMode(2,OUTPUT);
-  Mqtt.Begin(&MqttEthernetClient,&subscribe,&HandleMeeesgae,MqttServerAdress,&MqttServerPort,MqttClientId);
-  Network.Begin(ethernetMac);
+
+void setup()
+{
+    Serial.begin(9600);
+    dht.begin();
+    pinMode(2, OUTPUT);
+    Mqtt.Begin(&MqttEthernetClient, &subscribe, &HandleMeeesgae, MqttServerAdress, &MqttServerPort, MqttClientId);
+    Network.Begin(ethernetMac);
 }
-unsigned long int millissss=0;
-char test[]="123";
 
-void loop() {
-  Network.Loop();
-  Mqtt.Loop();
-  if(millis()-millissss>=5000){
-    Sensor1.Send(test);
-    millissss=millis();
-  }
+unsigned long int millissss = 0;
+float Temperature;
+float Humidity;
 
+void loop()
+{
+    Network.Loop();
+    Mqtt.Loop();
+
+    if (millis() - millissss >= 5000)
+    {
+        Temperature = dht.readTemperature();
+        Humidity = dht.readHumidity();
+        char buf[20];
+        dtostrf(Temperature, 3, 3, buf);
+        SensorTemp.Send(buf);
+        dtostrf(Humidity, 3, 3, buf);
+        SensorHum.Send(buf);
+        millissss = millis();
+    }
+    else if (millis() - millissss < 0)
+    {
+        millissss = millis();
+    }
 }

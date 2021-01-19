@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 #include "OpenHouseMqtt.h"
 
@@ -42,12 +43,19 @@ OpenHouseMqttRelay::OpenHouseMqttRelay(OpenHouseMqtt *mqtt, char *topic, void (F
     OpenHouseMqttRelay::OpenHouseMqttDevice::Mqtt=mqtt;
 }
 void OpenHouseMqttRelay::Recive(char *message, char *topic){
-    if(*topic==*OpenHouseMqttRelay::OpenHouseMqttDevice::mqttTopic)
+    bool sofpad=1;
+    for(int i;topic[i];i++){
+        if(topic[i]!=OpenHouseMqttRelay::OpenHouseMqttDevice::mqttTopic[i]){
+            sofpad=0;
+            break;
+        }
+    }
+    if(sofpad==1){
         Serial.print(topic);
         Serial.print("=>");
         Serial.println(message);
         OpenHouseMqttRelay::func(message);
-    
+    }
 }
 void OpenHouseMqttRelay::Subscribe(){
     Mqtt->Subscribe(OpenHouseMqttRelay::OpenHouseMqttDevice::mqttTopic);

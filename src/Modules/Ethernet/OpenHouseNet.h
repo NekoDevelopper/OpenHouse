@@ -26,14 +26,9 @@ class OpenHouseNet{
         void Begin(byte *mac);
         void Begin(byte *mac, byte *ip, byte *subnet, byte *dns, byte *gateway);
         //
-        OpenHouseNet(unsigned short int ethernetCsPin=10);
         void Loop();
 
 };
-
-OpenHouseNet::OpenHouseNet(unsigned short int ethernetCsPin){
-    Ethernet.init(ethernetCsPin);
-}
 
 void OpenHouseNet::Loop(){
     if(OpenHouseNet::ethernetShieldChip!=0){
@@ -88,6 +83,7 @@ void OpenHouseNet::PrintStatus(){
 }
 
 void OpenHouseNet::Begin(byte *mac){
+    Ethernet.init(8);
     OpenHouseNet::deviceMacAdress=mac;
     Serial.println("Network");
     Serial.println("Start configuring ethernet using DHCP");
